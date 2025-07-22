@@ -1,6 +1,6 @@
 #!/bin/bash
 # A script to batch convert video files to DNxHR for DaVinci Resolve.
-# It also moves the original file to an 'originals' folder upon success.
+# It uses GPU-accelerated decoding and moves the original to a folder.
 
 # Define the name of the folder where original files will be moved.
 ARCHIVE_DIR="originals"
@@ -26,7 +26,9 @@ for file in "$@"; do
     echo "--- 🎬 Starting conversion for: $file ---"
 
     # Run the ffmpeg command using the variables.
-    ffmpeg -i "$file" -c:v dnxhd -profile:v dnxhr_hq -c:a pcm_s16le "${filename}_resolve.mov"
+    # -hwaccel cuda: Tells ffmpeg to use the NVIDIA GPU for decoding.
+    # This offloads the decoding work from the CPU, speeding up the process.
+    ffmpeg -hwaccel cuda -i "$file" -c:v dnxhd -profile:v dnxhr_hq -c:a pcm_s16le "${filename}_resolve.mov"
 
     # Check if the last command (ffmpeg) was successful (exit code 0).
     if [ $? -eq 0 ]; then
